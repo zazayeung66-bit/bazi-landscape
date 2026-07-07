@@ -41,7 +41,7 @@ module.exports = async function handler(req, res) {
       body: JSON.stringify({
         model: endpointId,
         prompt: prompt,
-        size: '1080x1920',
+        size: '1440x2560',
         n: 1,
         response_format: 'url',
         watermark: false
