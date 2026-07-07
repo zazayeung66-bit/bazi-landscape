@@ -1,0 +1,1 @@
+{"name":"bazi-landscape","version":"1.0.0","description":"八字山水画生成器","scripts":{"dev":"vercel dev","deploy":"vercel --prod"},"dependencies":{},"devDependencies":{}}
