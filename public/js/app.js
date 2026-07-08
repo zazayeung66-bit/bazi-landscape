@@ -89,6 +89,61 @@ function showToast(msg){
   setTimeout(()=>toast.classList.remove('show'),2500)
 }
 
+// ===== 本地调试模式 =====
+function showLocalDebugPanel(bazi, prompt, description){
+  showPage('result');
+  resultImage.style.display='none';
+  
+  // 清空result-page并插入调试面板
+  const resultPage=document.getElementById('page-result');
+  const existing=resultPage.querySelector('.local-debug-panel');
+  if(existing)existing.remove();
+  
+  const panel=document.createElement('div');
+  panel.className='local-debug-panel';
+  panel.style.cssText='padding:20px;max-width:800px;margin:0 auto;background:#1a1a2e;color:#eee;border-radius:12px;font-family:monospace;';
+  
+  const pillarsHtml=bazi.pillars.map(p=>`<span style="display:inline-block;margin:4px;padding:8px 12px;background:#16213e;border-radius:6px;"><b>${p.name}</b> ${p.gan}${p.zhi}</span>`).join('');
+  
+  panel.innerHTML=`
+    <h2 style="color:#e94560;margin-bottom:12px;">🛠 本地调试模式</h2>
+    <div style="margin-bottom:16px;">${pillarsHtml}</div>
+    <div style="margin-bottom:12px;"><b>日干：</b>${bazi.dayGan}</div>
+    <div style="margin-bottom:16px;">
+      <b>Prompt：</b>
+      <pre style="background:#0f3460;padding:12px;border-radius:8px;white-space:pre-wrap;word-break:break-all;font-size:12px;">${prompt}</pre>
+      <button id="btn-copy-prompt" style="margin-top:8px;padding:6px 14px;background:#e94560;color:#fff;border:none;border-radius:6px;cursor:pointer;">复制Prompt</button>
+    </div>
+    <div style="margin-bottom:16px;">
+      <b>描述JSON：</b>
+      <pre style="background:#0f3460;padding:12px;border-radius:8px;white-space:pre-wrap;word-break:break-all;font-size:12px;">${JSON.stringify(description,null,2)}</pre>
+    </div>
+    <div style="display:flex;gap:12px;">
+      <button id="btn-local-random" style="padding:10px 20px;background:#533483;color:#fff;border:none;border-radius:8px;cursor:pointer;">重新随机</button>
+      <button id="btn-local-back" style="padding:10px 20px;background:#16213e;color:#fff;border:none;border-radius:8px;cursor:pointer;">返回输入</button>
+    </div>
+  `;
+  
+  resultPage.appendChild(panel);
+  
+  document.getElementById('btn-copy-prompt').addEventListener('click',()=>{
+    navigator.clipboard.writeText(prompt).then(()=>showToast('Prompt已复制'));
+  });
+  document.getElementById('btn-local-random').addEventListener('click',()=>{
+    const y=1950+Math.floor(Math.random()*74);
+    const m=1+Math.floor(Math.random()*12);
+    const d=1+Math.floor(Math.random()*28);
+    const h=Math.floor(Math.random()*12)*2;
+    yearSelect.value=y;monthSelect.value=m;daySelect.value=d;hourSelect.value=h/2;
+    handleSubmit({preventDefault:()=>{}});
+  });
+  document.getElementById('btn-local-back').addEventListener('click',()=>{
+    panel.remove();
+    resultImage.style.display='';
+    showPage('input');
+  });
+}
+
 async function handleSubmit(e){
   e.preventDefault();
   let year=parseInt(yearSelect.value),month=parseInt(monthSelect.value),day=parseInt(daySelect.value);
@@ -109,6 +164,13 @@ async function handleSubmit(e){
   const promptResult=generatePrompt(currentBazi);
   currentPrompt=promptResult.prompt;
   currentDescription=promptResult.description;
+  
+  // 本地文件模式调试
+  if(location.protocol==='file:'){
+    showLocalDebugPanel(currentBazi,currentPrompt,currentDescription);
+    return;
+  }
+  
   showPage('loading');
   try{
     const response=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:currentPrompt})});
