@@ -63,13 +63,17 @@ function lunar2solar(y,m,d,isLeapMonth){
 
 // ===== 八字计算 =====
 
-function getYearGanZhi(year){
-  // 年柱以立春为界（约2月4日）
-  var effectiveYear=(year<1900?1900:year);
-  var offset=(effectiveYear-1984+60)%60;
-  var gan=TIAN_GAN[offset%10];
-  var zhi=DI_ZHI[offset%12];
-  return{gan,zhi,full:gan+zhi};
+function getYearGanZhi(year, month, day){
+  // 年柱以立春为界（约2月4日），立春前算上一年
+  var effectiveYear = year;
+  if (month < 2 || (month === 2 && day < 4)) {
+    effectiveYear = year - 1;
+  }
+  effectiveYear = (effectiveYear < 1900 ? 1900 : effectiveYear);
+  var offset = (effectiveYear - 1984 + 60) % 60;
+  var gan = TIAN_GAN[offset % 10];
+  var zhi = DI_ZHI[offset % 12];
+  return { gan, zhi, full: gan + zhi };
 }
 
 function getDayGanZhi(year,month,day){
@@ -233,7 +237,7 @@ function calcShiShenRatio(pillars,dayGan){
 }
 
 function calcBazi(year,month,day,hour){
-  var yearGZ=getYearGanZhi(year);
+  var yearGZ=getYearGanZhi(year,month,day);
   var dayGZ=getDayGanZhi(year,month,day);
   var monthGZ=getMonthGanZhi(yearGZ.gan,year,month,day);
   
